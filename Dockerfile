@@ -4,6 +4,8 @@ MAINTAINER Deven Phillips <deven.phillips@redhat.com>
 
 RUN yum install -y epel-release && \
     yum clean all
+RUN yum install unzip && \
+    yum clean all
 RUN yum install -y redhat-rpm-config \
     make automake autoconf gcc gcc-c++ \
     libstdc++ libstdc++-devel \
