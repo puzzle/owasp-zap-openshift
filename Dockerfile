@@ -4,8 +4,6 @@ MAINTAINER Deven Phillips <deven.phillips@redhat.com>
 
 RUN yum install -y epel-release && \
     yum clean all
-RUN yum install unzip && \
-    yum clean all
 RUN yum install -y redhat-rpm-config \
     make automake autoconf gcc gcc-c++ \
     libstdc++ libstdc++-devel \
@@ -14,7 +12,7 @@ RUN yum install -y redhat-rpm-config \
     xorg-x11-server-Xvfb openbox xterm \
     net-tools python-pip \
     firefox nss_wrapper java-1.8.0-openjdk-headless \
-    java-1.8.0-openjdk-devel nss_wrapper git && \
+    java-1.8.0-openjdk-devel nss_wrapper git unzip && \
     yum clean all
 
 RUN pip install --upgrade pip
