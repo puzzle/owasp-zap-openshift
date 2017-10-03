@@ -42,7 +42,7 @@ COPY .xinitrc /var/lib/jenkins/
 
 WORKDIR /zap
 # Download and expand the latest weekly release
-curl -s https://raw.githubusercontent.com/zaproxy/zap-admin/master/ZapVersions-dev.xml | xmlstarlet sel -t -v //url |grep -i WEEKLY | wget -q --content-disposition -i - -O temp.zip && \
+RUN curl -s https://raw.githubusercontent.com/zaproxy/zap-admin/master/ZapVersions-dev.xml | xmlstarlet sel -t -v //url |grep -i WEEKLY | wget -q --content-disposition -i - -O temp.zip && \
     temp=$(mktemp -d) && unzip -d "$temp" temp.zip && mkdir -p . && mv "$temp"/*/* . && rmdir "$temp"/* "$temp" && rm temp.zip  && \
     curl -s -L https://bitbucket.org/meszarv/webswing/downloads/webswing-2.3-distribution.zip | jar -x && \
     touch AcceptedLicense
