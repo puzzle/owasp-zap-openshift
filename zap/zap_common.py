@@ -59,41 +59,44 @@ def is_in_scope(plugin_id, url, out_of_scope_dict):
     """ Returns True if the url is in scope for the specified plugin_id """
     if '*' in out_of_scope_dict:
         for oos_prog in out_of_scope_dict['*']:
-            #print('OOS Compare ' + oos_url + ' vs ' + 'url)
+            # print('OOS Compare ' + oos_url + ' vs ' + 'url)
             if oos_prog.match(url):
-                #print('OOS Ignoring ' + str(plugin_id) + ' ' + url)
+                # print('OOS Ignoring ' + str(plugin_id) + ' ' + url)
                 return False
-        #print 'Not in * dict'
+                # print 'Not in * dict'
     if plugin_id in out_of_scope_dict:
         for oos_prog in out_of_scope_dict[plugin_id]:
-            #print('OOS Compare ' + oos_url + ' vs ' + 'url)
+            # print('OOS Compare ' + oos_url + ' vs ' + 'url)
             if oos_prog.match(url):
-                #print('OOS Ignoring ' + str(plugin_id) + ' ' + url)
+                # print('OOS Ignoring ' + str(plugin_id) + ' ' + url)
                 return False
-    #print 'Not in ' + plugin_id + ' dict'
+    # print 'Not in ' + plugin_id + ' dict'
     return True
 
 
 def print_rule(action, alert_list, detailed_output, user_msg, in_progress_issues):
     id = alert_list[0].get('pluginId')
     if id in in_progress_issues:
-        print (action + '-IN_PROGRESS: ' + alert_list[0].get('alert') + ' [' + id + '] x ' + str(len(alert_list)) + ' ' + user_msg)
+        print (action + '-IN_PROGRESS: ' + alert_list[0].get('alert') + ' [' + id + '] x ' + str(
+            len(alert_list)) + ' ' + user_msg)
         if in_progress_issues[id]["link"]:
             print ('\tProgress link: ' + in_progress_issues[id]["link"])
     else:
-        print (action + '-NEW: ' + alert_list[0].get('alert') + ' [' + id + '] x ' + str(len(alert_list)) + ' ' + user_msg)
+        print (
+            action + '-NEW: ' + alert_list[0].get('alert') + ' [' + id + '] x ' + str(len(alert_list)) + ' ' + user_msg)
     if detailed_output:
         # Show (up to) first 5 urls
         for alert in alert_list[0:5]:
             print ('\t' + alert.get('url'))
 
 
-def print_rules(alert_dict, level, config_dict, config_msg, min_level, levels, inc_rule, inc_extra, detailed_output, in_progress_issues):
+def print_rules(alert_dict, level, config_dict, config_msg, min_level, levels, inc_rule, inc_extra, detailed_output,
+                in_progress_issues):
     # print out the ignored rules
     count = 0
     inprog_count = 0
     for key, alert_list in sorted(alert_dict.items()):
-        #if (config_dict.has_key(key) and config_dict[key] == level):
+        # if (config_dict.has_key(key) and config_dict[key] == level):
         if inc_rule(config_dict, key, inc_extra):
             user_msg = ''
             if key in config_msg:
@@ -140,9 +143,9 @@ def dump_log_file(cid):
 
 
 def cp_to_docker(cid, file, dir):
-    logging.debug ('Copy ' + file)
+    logging.debug('Copy ' + file)
     params = ['docker', 'cp', file, cid + ':' + dir + file]
-    logging.debug (subprocess.check_output(params))
+    logging.debug(subprocess.check_output(params))
 
 
 def running_in_docker():
@@ -177,8 +180,8 @@ def wait_for_zap_start(zap, timeout):
 
     if not version:
         raise IOError(
-          errno.EIO,
-          'Failed to connect to ZAP after {0} seconds'.format(timeout))
+            errno.EIO,
+            'Failed to connect to ZAP after {0} seconds'.format(timeout))
 
 
 def start_docker_zap(docker_image, port, extra_zap_params, mount_dir):
@@ -196,15 +199,15 @@ def start_docker_zap(docker_image, port, extra_zap_params, mount_dir):
         params.extend(['-v', mount_dir + ':/zap/wrk/:rw'])
 
     params.extend([
-            '-u', 'zap',
-            '-p', str(port) + ':' + str(port),
-            '-d', docker_image,
-            'zap-x.sh', '-daemon',
-            '-port', str(port),
-            '-host', '0.0.0.0',
-            '-config', 'api.disablekey=true',
-            '-config', 'api.addrs.addr.name=.*',
-            '-config', 'api.addrs.addr.regex=true'])
+        '-u', 'zap',
+        '-p', str(port) + ':' + str(port),
+        '-d', docker_image,
+        'zap-x.sh', '-daemon',
+        '-port', str(port),
+        '-host', '0.0.0.0',
+        '-config', 'api.disablekey=true',
+        '-config', 'api.addrs.addr.name=.*',
+        '-config', 'api.addrs.addr.regex=true'])
 
     params.extend(extra_zap_params)
 
@@ -222,10 +225,10 @@ def get_free_port():
         if not (sock.connect_ex(('127.0.0.1', port)) == 0):
             return port
 
-    
+
 def ipaddress_for_cid(cid):
     insp_output = subprocess.check_output(['docker', 'inspect', cid]).strip().decode('utf-8')
-    #logging.debug('Docker Inspect: ' + insp_output)
+    # logging.debug('Docker Inspect: ' + insp_output)
     insp_json = json.loads(insp_output)
     return str(insp_json[0]['NetworkSettings']['IPAddress'])
 
@@ -248,40 +251,159 @@ def stop_docker(cid):
         logging.warning('Docker rm failed')
 
 
+# spider----------------------------------------------------------------------------------------------------------------
+
 def zap_spider(zap, target):
+    ctx_list = print_and_get_loaded_context(zap)
+
+    if len(ctx_list) == 0:
+        zap_spider_nocontext(zap, target)
+    else:
+        for contextname in ctx_list:
+            zap_spider_context(zap, zap.context.context(contextname), target)
+
+    logging.debug('Spider complete')
+
+
+def print_and_get_loaded_context(zap):
+    ctx_list = zap.context.context_list
+    logging.debug(str(len(ctx_list)) + ' context(s) loaded')
+    for contextname in ctx_list:
+        logging.debug('context: ' + str(contextname))
+
+    return ctx_list
+
+
+def zap_spider_nocontext(zap, target):
     logging.debug('Spider ' + target)
     spider_scan_id = zap.spider.scan(target)
     time.sleep(5)
+    while (int(zap.spider.status(spider_scan_id)) < 100):
+        logging.debug('Spider progress %: ' + zap.spider.status(spider_scan_id))
+        time.sleep(5)
+
+
+def zap_spider_context(zap, ctx, target):
+    ctx_id = ctx.get('id')
+    ctx_name = ctx.get('name')
+    user_list = zap.users.users_list(ctx_id)
+    if len(user_list) == 0:
+        zap_spider_nocontext(zap, target)
+    else:
+        for user in user_list:
+            user_id = user.get('id')
+            user_name = user.get('name')
+            logging.debug('Spider ' + target + ' with user ' + user_name + ' defined in context ' + ctx_name)
+            zap_spider_context_for_user(zap, ctx_id, user_id, target)
+
+
+def zap_spider_context_for_user(zap, ctx_id, user_id, target):
+    spider_scan_id = zap.spider.scan_as_user(ctx_id, user_id, url=target, maxchildren=None, recurse=True,
+                                             subtreeonly=None)
+    time.sleep(10)
 
     while (int(zap.spider.status(spider_scan_id)) < 100):
         logging.debug('Spider progress %: ' + zap.spider.status(spider_scan_id))
         time.sleep(5)
-    logging.debug('Spider complete')
 
+
+# ajax spider-----------------------------------------------------------------------------------------------------------
 
 def zap_ajax_spider(zap, target, max_time):
-    logging.debug('AjaxSpider ' + target)
     if max_time:
         zap.ajaxSpider.set_option_max_duration(str(max_time))
+
+    ctx_list = print_and_get_loaded_context(zap)
+
+    if len(ctx_list) == 0:
+        zap_ajax_spider_nocontext(zap, target)
+    else:
+        for contextname in ctx_list:
+            zap_ajax_spider_context(zap, zap.context.context(contextname), target)
+
+    logging.debug('Ajax Spider complete')
+
+def zap_ajax_spider_nocontext(zap, target):
+    logging.debug('AjaxSpider ' + target)
     zap.ajaxSpider.scan(target)
     time.sleep(5)
 
     while (zap.ajaxSpider.status == 'running'):
         logging.debug('Ajax Spider running, found urls: ' + zap.ajaxSpider.number_of_results)
         time.sleep(5)
-    logging.debug('Ajax Spider complete')
 
+def zap_ajax_spider_context(zap, ctx, target):
+    ctx_id = ctx.get('id')
+    ctx_name = ctx.get('name')
+    user_list = zap.users.users_list(ctx_id)
+    if len(user_list) == 0:
+        zap_ajax_spider_nocontext(zap, target)
+    else:
+        for user in user_list:
+            user_name = user.get('name')
+            logging.debug('AjaxSpider ' + target + ' with user ' + user_name + ' defined in context ' + ctx_name )
+            zap_ajax_spider_context_for_user(zap, ctx_name, user_name, target)
+
+def zap_ajax_spider_context_for_user(zap, contextname, username, target):
+    zap.ajaxSpider.scan_as_user(contextname, username,target)
+    time.sleep(10)
+
+    while (zap.ajaxSpider.status == 'running'):
+        logging.debug('Ajax Spider running, found urls: ' + zap.ajaxSpider.number_of_results)
+        time.sleep(5)
+
+# active scan-----------------------------------------------------------------------------------------------------------
 
 def zap_active_scan(zap, target, policy):
+    ctx_list = print_and_get_loaded_context(zap)
+
+    if len(ctx_list) == 0:
+        zap_active_scan_nocontext(zap, target, policy)
+    else:
+        for contextname in ctx_list:
+            zap_active_scan_context(zap, zap.context.context(contextname), target, policy)
+
+    logging.debug('Spider complete')
+
+
+def zap_active_scan_nocontext(zap, target, policy):
     logging.debug('Active Scan ' + target + ' with policy ' + policy)
     ascan_scan_id = zap.ascan.scan(target, recurse=True, scanpolicyname=policy)
-    time.sleep(5)
+    time.sleep(15)
 
-    while(int(zap.ascan.status(ascan_scan_id)) < 100):
+    while (int(zap.ascan.status(ascan_scan_id)) < 100):
+        logging.debug('Active Scan progress %: ' + zap.ascan.status(ascan_scan_id))
+        time.sleep(15)
+
+    logging.debug('Active Scan complete')
+    logging.debug(zap.ascan.scan_progress(ascan_scan_id))
+
+
+def zap_active_scan_context(zap, ctx, target, policy):
+    ctx_id = ctx.get('id')
+    ctx_name = ctx.get('name')
+    user_list = zap.users.users_list(ctx_id)
+    if len(user_list) == 0:
+        zap_active_scan_nocontext(zap, target, policy)
+    else:
+        for user in user_list:
+            user_id = user.get('id')
+            user_name = user.get('name')
+            logging.debug(
+                'Active Scan ' + target + ' with user ' + user_name + ' defined in context ' + ctx_name + ' and policy ' + policy)
+            zap_active_scan_context_for_user(zap, ctx_id, user_id, target, policy)
+
+
+def zap_active_scan_context_for_user(zap, ctx_id, user_id, target, policy):
+    ascan_scan_id = zap.ascan.scan_as_user(target, ctx_id, user_id, recurse=True, scanpolicyname=policy)
+    time.sleep(10)
+
+    while (int(zap.ascan.status(ascan_scan_id)) < 100):
         logging.debug('Active Scan progress %: ' + zap.ascan.status(ascan_scan_id))
         time.sleep(5)
     logging.debug('Active Scan complete')
     logging.debug(zap.ascan.scan_progress(ascan_scan_id))
+
 
 
 def zap_wait_for_passive_scan(zap):
