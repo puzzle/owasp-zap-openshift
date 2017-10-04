@@ -12,7 +12,7 @@ image, so look at the Wiki page [HERE](https://github.com/zaproxy/zaproxy/wiki/D
 
 ## Deploying In OpenShift
 ```bash
-oc new-build -l 'role=jenkins-slave' https://github.com/rht-labs/owasp-zap-openshift.git
+oc new-build -l 'role=jenkins-slave' https://github.com/puzzle/owasp-zap-openshift.git
 ```
 
 ## Configuring In OpenShift Jenkins
@@ -33,10 +33,27 @@ stage('Get a ZAP Pod') {
         stage('Scan Web Application') {
             dir('/zap') {
                 def retVal = sh returnStatus: true, script: '/zap/zap-baseline.py -r baseline.html -t http://<some-web-site>'
-                publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: true, reportDir: '/zap/wrk', reportFiles: 'baseline.html', reportName: 'ZAP Baseline Scan', reportTitles: 'ZAP Baseline Scan'])
                 echo "Return value is: ${retVal}"
+                
+                echo "copy and archive report"
+                sh script: "cp /zap/wrk/baseline.html ."
+                archiveArtifacts baseline.html
             }
         }
     }
 }
+```
+
+## Baseline Scan with user
+When loading a context file which defines project specific user and authentication mechanism the following command executes a baseline scan logging into the application with the defined users 
+```groovy
+    def retVal = sh returnStatus: true, script: '/zap/zap-baseline.py -r baseline.html -t http://<some-web-site> -n <contextfile>'
+
+```
+
+## Full Scan with user
+When loading a context file which defines project specific user and authentication mechanism the following command executes a full scan logging into the application with the defined users and processes a active scan
+```groovy
+    def retVal = sh returnStatus: true, script: '/zap/zap-full-scan.py -r fullscan.html -t http://<some-web-site> -n <contextfile>'
+
 ```
