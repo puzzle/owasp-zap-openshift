@@ -277,10 +277,10 @@ def print_and_get_loaded_context(zap):
 def zap_spider_nocontext(zap, target):
     logging.debug('Spider ' + target)
     spider_scan_id = zap.spider.scan(target)
-    time.sleep(5)
+    time.sleep(30)
     while (int(zap.spider.status(spider_scan_id)) < 100):
         logging.debug('Spider progress %: ' + zap.spider.status(spider_scan_id))
-        time.sleep(5)
+        time.sleep(15)
 
 
 def zap_spider_context(zap, ctx, target):
@@ -300,11 +300,11 @@ def zap_spider_context(zap, ctx, target):
 def zap_spider_context_for_user(zap, ctx_id, user_id, target):
     spider_scan_id = zap.spider.scan_as_user(ctx_id, user_id, url=target, maxchildren=None, recurse=True,
                                              subtreeonly=None)
-    time.sleep(10)
+    time.sleep(30)
 
     while (int(zap.spider.status(spider_scan_id)) < 100):
         logging.debug('Spider progress %: ' + zap.spider.status(spider_scan_id))
-        time.sleep(5)
+        time.sleep(15)
 
 
 # ajax spider-----------------------------------------------------------------------------------------------------------
@@ -326,11 +326,11 @@ def zap_ajax_spider(zap, target, max_time):
 def zap_ajax_spider_nocontext(zap, target):
     logging.debug('AjaxSpider ' + target)
     zap.ajaxSpider.scan(target)
-    time.sleep(5)
+    time.sleep(30)
 
     while (zap.ajaxSpider.status == 'running'):
         logging.debug('Ajax Spider running, found urls: ' + zap.ajaxSpider.number_of_results)
-        time.sleep(5)
+        time.sleep(15)
 
 def zap_ajax_spider_context(zap, ctx, target):
     ctx_id = ctx.get('id')
@@ -346,11 +346,11 @@ def zap_ajax_spider_context(zap, ctx, target):
 
 def zap_ajax_spider_context_for_user(zap, contextname, username, target):
     zap.ajaxSpider.scan_as_user(contextname, username,target)
-    time.sleep(10)
+    time.sleep(30)
 
     while (zap.ajaxSpider.status == 'running'):
         logging.debug('Ajax Spider running, found urls: ' + zap.ajaxSpider.number_of_results)
-        time.sleep(5)
+        time.sleep(15)
 
 # active scan-----------------------------------------------------------------------------------------------------------
 
@@ -369,7 +369,7 @@ def zap_active_scan(zap, target, policy):
 def zap_active_scan_nocontext(zap, target, policy):
     logging.debug('Active Scan ' + target + ' with policy ' + policy)
     ascan_scan_id = zap.ascan.scan(target, recurse=True, scanpolicyname=policy)
-    time.sleep(15)
+    time.sleep(30)
 
     while (int(zap.ascan.status(ascan_scan_id)) < 100):
         logging.debug('Active Scan progress %: ' + zap.ascan.status(ascan_scan_id))
@@ -396,11 +396,11 @@ def zap_active_scan_context(zap, ctx, target, policy):
 
 def zap_active_scan_context_for_user(zap, ctx_id, user_id, target, policy):
     ascan_scan_id = zap.ascan.scan_as_user(target, ctx_id, user_id, recurse=True, scanpolicyname=policy)
-    time.sleep(10)
+    time.sleep(30)
 
     while (int(zap.ascan.status(ascan_scan_id)) < 100):
         logging.debug('Active Scan progress %: ' + zap.ascan.status(ascan_scan_id))
-        time.sleep(5)
+        time.sleep(15)
     logging.debug('Active Scan complete')
     logging.debug(zap.ascan.scan_progress(ascan_scan_id))
 
