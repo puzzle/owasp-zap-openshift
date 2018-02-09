@@ -42,7 +42,7 @@ COPY .xinitrc /var/lib/jenkins/
 
 WORKDIR /zap
 # Download and expand the latest stable release
-RUN wget -q --content-disposition -i https://github.com/zaproxy/zaproxy/releases/download/${ZAP_VER}/ZAP_${ZAP_VER}_Linux.tar.gz -O - | tar zx --strip-components=1 && \
+RUN set -o pipefail && wget -q --content-disposition -i https://github.com/zaproxy/zaproxy/releases/download/${ZAP_VER}/ZAP_${ZAP_VER}_Linux.tar.gz -O - | tar zx --strip-components=1 && \
     curl -s -L https://bitbucket.org/meszarv/webswing/downloads/webswing-2.3-distribution.zip | jar -x && \
     touch AcceptedLicense
 ADD webswing.config /zap/webswing-2.3/webswing.config
