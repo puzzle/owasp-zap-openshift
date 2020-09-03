@@ -325,11 +325,11 @@ def main(argv):
             if target_url:
                 logging.debug('Import OpenAPI URL ' + target_url)
                 res = zap._request(zap.base + 'openapi/action/importUrl/', {'url':target})
-                urls = zap.core.urls
+                urls = zap.core.urls()
             else:
                 logging.debug('Import OpenAPI File ' + target_file)
                 res = zap._request(zap.base + 'openapi/action/importFile/', {'file': base_dir + target_file})
-                urls = zap.core.urls
+                urls = zap.core.urls()
                 if len(urls) > 0:
                     # Choose the first one - will be striping off the path below
                     target = urls[0]
@@ -339,11 +339,11 @@ def main(argv):
             if target_url:
                 logging.debug('Import SOAP URL ' + target_url)
                 res = zap._request(zap.base + 'soap/action/importUrl/', {'url':target})
-                urls = zap.core.urls
+                urls = zap.core.urls()
             else:
                 logging.debug('Import SOAP File ' + target_file)
                 res = zap._request(zap.base + 'soap/action/importFile/', {'file': base_dir + target_file})
-                urls = zap.core.urls
+                urls = zap.core.urls()
                 if len(urls) > 0:
                     # Choose the first one - will be striping off the path below
                     target = urls[0]
@@ -381,7 +381,7 @@ def main(argv):
         zap_wait_for_passive_scan(zap)
 
         # Print out a count of the number of urls
-        num_urls = len(zap.core.urls)
+        num_urls = len(zap.core.urls())
         if num_urls == 0:
             logging.warning('No URLs found - is the target URL accessible? Local services may not be accessible from the Docker container')
         else:
